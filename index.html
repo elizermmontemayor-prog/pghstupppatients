@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Stupp Protocol Planner</title>
+  <style>
+    :root {
+      --bg: #f4efe5;
+      --bg-accent: #e4d3ba;
+      --card: rgba(255, 252, 247, 0.95);
+      --card-strong: #fffdf8;
+      --border: #dcc9ad;
+      --text: #2f2418;
+      --muted: #7c6954;
+      --heading: #452f1d;
+      --brand: #8b5e34;
+      --brand-dark: #65421f;
+      --brand-soft: #f0e2cf;
+      --chemo: #d8ebff;
+      --chemo-border: #8db6df;
+      --weekend: #f6efe4;
+      --shadow: 0 18px 40px rgba(74, 47, 21, 0.12);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.7), transparent 35%),
+        linear-gradient(180deg, #f7f1e8 0%, var(--bg) 55%, #efe5d7 100%);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 32px auto 48px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+      padding: 32px;
+      border: 1px solid rgba(220, 201, 173, 0.8);
+      border-radius: calc(var(--radius-lg) + 4px);
+      background:
+        linear-gradient(135deg, rgba(255,255,255,0.88), rgba(249, 240, 227, 0.95)),
+        linear-gradient(120deg, rgba(139, 94, 52, 0.08), transparent 45%);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand-dark);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      color: var(--heading);
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .card {
+      margin-bottom: 24px;
+      padding: 24px;
+      border: 1px solid rgba(220, 201, 173, 0.9);
+      border-radius: var(--radius-lg);
+      background: var(--card);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .card h2 {
+      margin: 0 0 18px;
+      color: var(--heading);
+      font-size: 1.45rem;
+    }
+
+    .setup-card {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250, 243, 233, 0.96)),
+        var(--card-strong);
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px 18px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-wide {
+      grid-column: 1 / -1;
+    }
+
+    .field-split {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .unit-toggle {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .toggle-chip {
+      width: auto;
+      min-width: 0;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.92);
+      color: var(--brand-dark);
+      box-shadow: none;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .toggle-chip.active {
+      background: linear-gradient(135deg, var(--brand) 0%, #a97746 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 8px 18px rgba(101, 66, 31, 0.18);
+    }
+
+    .input-group[hidden] {
+      display: none;
+    }
+
+    label {
+      color: var(--heading);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    input, button {
+      width: 100%;
+      font-size: 16px;
+    }
+
+    input {
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.94);
+      color: var(--text);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px rgba(139, 94, 52, 0.14);
+      transform: translateY(-1px);
+    }
+
+    input::placeholder {
+      color: #a3927e;
+    }
+
+    .button-row {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      width: auto;
+      min-width: 180px;
+      padding: 14px 22px;
+      border: none;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--brand) 0%, #a97746 100%);
+      color: white;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      box-shadow: 0 12px 26px rgba(101, 66, 31, 0.22);
+      transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 30px rgba(101, 66, 31, 0.28);
+      filter: saturate(1.05);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .secondary-button {
+      background: rgba(255,255,255,0.96);
+      color: var(--brand-dark);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .secondary-button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+      box-shadow: none;
+    }
+
+    .export-hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .info-stack {
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .info-box {
+      padding: 18px;
+      border: 1px solid rgba(220, 201, 173, 0.9);
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, #fffdf9 0%, #f8f0e3 100%);
+    }
+
+    .info-box h3 {
+      margin: 0 0 10px;
+      color: var(--heading);
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .cycle-box {
+      padding: 18px;
+      border: 1px solid rgba(220, 201, 173, 0.9);
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, #fffdf9 0%, #f6ecde 100%);
+    }
+
+    .cycle-box h3 {
+      margin: 0 0 12px;
+      color: var(--heading);
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .cycle-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .month-cycle-panel {
+      margin: 14px 14px 0;
+      padding: 14px;
+      border: 1px solid rgba(220, 201, 173, 0.9);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fffdf9 0%, #f6ecde 100%);
+    }
+
+    .month-cycle-panel h4 {
+      margin: 0 0 10px;
+      color: var(--heading);
+      font-size: 0.9rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .cycle-item {
+      padding: 14px;
+      border: 1px solid #e5d5bf;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.82);
+    }
+
+    .cycle-item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--heading);
+    }
+
+    .cycle-meta {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .cycle-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cycle-actions button {
+      min-width: 0;
+      padding: 10px 14px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.96);
+      color: var(--brand-dark);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .cycle-actions button.active {
+      background: linear-gradient(135deg, #c17f48 0%, #a7632d 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 8px 18px rgba(167, 99, 45, 0.2);
+    }
+
+    .cycle-status {
+      margin: 8px 0 0;
+      color: var(--brand-dark);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #3d2d1e;
+    }
+
+    .calendar-shell {
+      min-width: 0;
+    }
+
+    .calendar-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .month-block {
+      overflow: hidden;
+      border: 1px solid rgba(220, 201, 173, 0.95);
+      border-radius: 20px;
+      background: #fffdfa;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
+    .month-title {
+      margin: 0;
+      padding: 16px 18px;
+      background: linear-gradient(135deg, #f3e1ca 0%, #e7cfb1 100%);
+      color: var(--heading);
+      font-size: 1.08rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #eadfce;
+      text-align: left;
+      padding: 10px;
+      height: 118px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #5b4028;
+      color: white;
+      text-align: center;
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+    }
+
+    td {
+      position: relative;
+      background: #fffdfa;
+    }
+
+    td strong {
+      display: inline-block;
+      font-size: 1.05rem;
+      color: var(--heading);
+      margin-bottom: 6px;
+    }
+
+    .chemo {
+      background: linear-gradient(180deg, #eef6ff 0%, var(--chemo) 100%);
+      box-shadow: inset 0 0 0 1px var(--chemo-border);
+      font-weight: 700;
+    }
+
+    .weekend {
+      background: var(--weekend);
+      color: #7d6d5a;
+    }
+
+    .day-label {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(139, 94, 52, 0.11);
+      color: var(--brand-dark);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .day-event {
+      display: block;
+      margin-top: 8px;
+      color: #4c3a29;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .cycle-start {
+      box-shadow:
+        inset 0 0 0 2px rgba(139, 94, 52, 0.55),
+        inset 0 0 0 1px var(--chemo-border);
+    }
+
+    .selectable-date {
+      cursor: pointer;
+      outline: 2px dashed rgba(139, 94, 52, 0.4);
+      outline-offset: -5px;
+    }
+
+    .selectable-date:hover {
+      background: #fef5e9;
+    }
+
+    .selection-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .phase-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .info-stack {
+        position: static;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        margin: 18px auto 28px;
+      }
+
+      .hero,
+      .card {
+        padding: 18px;
+        border-radius: 20px;
+      }
+
+      .input-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-split {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      th, td {
+        height: 104px;
+        padding: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <section class="hero">
+    <div class="eyebrow">Treatment Planning</div>
+    <h1>Stupp Protocol Planner</h1>
+    <p class="subtitle">Your personalized guide to chemotherapy.</p>
+  </section>
+
+  <section class="card setup-card">
+    <div class="input-grid">
+      <div class="field field-wide">
+        <label for="patientName">Name</label>
+        <input type="text" id="patientName" placeholder="Patient name">
+      </div>
+
+      <div class="field field-wide">
+        <label for="startDate">Start of radiation</label>
+        <input type="date" id="startDate">
+      </div>
+
+      <div class="field">
+        <label>Height</label>
+        <div class="unit-toggle">
+          <button type="button" class="toggle-chip active" id="heightMetricBtn" onclick="setHeightUnit('cm')">cm</button>
+          <button type="button" class="toggle-chip" id="heightImperialBtn" onclick="setHeightUnit('ftin')">ft / in</button>
+        </div>
+        <div class="input-group" id="heightMetricGroup">
+          <input type="number" id="height" placeholder="e.g. 165">
+        </div>
+        <div class="input-group field-split" id="heightImperialGroup" hidden>
+          <input type="number" id="heightFeet" placeholder="Feet">
+          <input type="number" id="heightInches" placeholder="Inches">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Weight</label>
+        <div class="unit-toggle">
+          <button type="button" class="toggle-chip active" id="weightMetricBtn" onclick="setWeightUnit('kg')">kg</button>
+          <button type="button" class="toggle-chip" id="weightImperialBtn" onclick="setWeightUnit('lbs')">lbs</button>
+        </div>
+        <div class="input-group" id="weightMetricGroup">
+          <input type="number" id="weight" placeholder="e.g. 60">
+        </div>
+        <div class="input-group" id="weightImperialGroup" hidden>
+          <input type="number" id="weightLbs" placeholder="e.g. 132">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rtTime">Radiation time</label>
+        <input type="time" id="rtTime">
+      </div>
+
+      <div class="field">
+        <label for="tmzTime">Adjuvant TMZ time</label>
+        <input type="time" id="tmzTime" value="22:00">
+      </div>
+    </div>
+
+    <div class="button-row">
+      <button onclick="generate()">Generate Planner</button>
+      <button id="downloadPrintableBtn" class="secondary-button" onclick="downloadPrintablePdf()" disabled>Download as PDF</button>
+      <p class="export-hint">Opens a PDF-ready page with a manual download button instead of printing automatically.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Concomitant Phase</h2>
+    <div class="phase-grid">
+      <div class="info-stack">
+        <div class="info-box">
+          <h3>Dose Summary</h3>
+          <pre id="conDose"></pre>
+        </div>
+        <div class="info-box">
+          <h3>Timing Guide</h3>
+          <pre id="conTiming"></pre>
+        </div>
+      </div>
+      <div class="calendar-shell">
+        <div id="conCalendar"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Adjuvant Phase</h2>
+    <div class="phase-grid">
+      <div class="info-stack">
+        <div class="info-box">
+          <h3>Dose Summary</h3>
+          <pre id="adjDose"></pre>
+        </div>
+        <div class="info-box">
+          <h3>Timing Guide</h3>
+          <pre id="adjTiming"></pre>
+        </div>
+      </div>
+      <div class="calendar-shell">
+        <div id="adjCalendar"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+let startGlobal;
+let adjGlobalStart;
+let heightUnit="cm";
+let weightUnit="kg";
+let adjCycleAnswers=Array(6).fill(null);
+let adjCycleOverrides=Array(6).fill(null);
+let selectingCycleIndex=null;
+let plannerGenerated=false;
+let patientNameValue="";
+
+function round20(x){ return Math.round(x/20)*20; }
+
+function tabletBreakdown(dose){
+  let n100 = Math.floor(dose/100);
+  let n20 = (dose%100)/20;
+  return {n100, n20};
+}
+
+function boxes(n){ return Math.ceil(n/5); }
+
+function normalizeDate(d){
+  let copy=new Date(d);
+  copy.setHours(0,0,0,0);
+  return copy;
+}
+
+function addDays(d,days){
+  let copy=normalizeDate(d);
+  copy.setDate(copy.getDate()+days);
+  return copy;
+}
+
+function sameDay(a,b){
+  return normalizeDate(a).getTime()===normalizeDate(b).getTime();
+}
+
+function parseDateValue(value){
+  if(!value) return null;
+  let [y,m,d]=value.split("-").map(Number);
+  return new Date(y,m-1,d);
+}
+
+function parseTime(t){
+  if(!t) return null;
+  let [h,m]=t.split(":");
+  let d=new Date();
+  d.setHours(h,m,0,0);
+  return d;
+}
+
+function formatTime(d){
+  if(!d) return "-";
+  let h=d.getHours();
+  let m=d.getMinutes().toString().padStart(2,"0");
+  let ampm=h>=12?"PM":"AM";
+  h=h%12||12;
+  return `${h}:${m} ${ampm}`;
+}
+
+function formatDate(d){
+  if(!d) return "-";
+  return normalizeDate(d).toLocaleDateString(undefined,{
+    year:"numeric",
+    month:"short",
+    day:"numeric"
+  });
+}
+
+function formatDateForFilename(d){
+  if(!d) return "planner";
+  let year=d.getFullYear();
+  let month=String(d.getMonth()+1).padStart(2,"0");
+  let day=String(d.getDate()).padStart(2,"0");
+  return `${year}-${month}-${day}`;
+}
+
+function escapeHtml(text){
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function formatDisplayName(){
+  let name=patientNameValue.trim();
+  return name || "Unnamed patient";
+}
+
+function buildSteps(arr){
+  return arr.filter(a=>a.time)
+    .sort((a,b)=>a.time-b.time)
+    .map(a=>`${a.label}: ${formatTime(a.time)}`)
+    .join("\n");
+}
+
+function setHeightUnit(unit){
+  if(unit===heightUnit) return;
+
+  if(unit==="ftin"){
+    let cm=parseFloat(height.value);
+    if(cm){
+      let totalInches=cm/2.54;
+      let feet=Math.floor(totalInches/12);
+      let inches=Math.round((totalInches-feet*12)*10)/10;
+      heightFeet.value=feet;
+      heightInches.value=inches;
+    }
+  } else {
+    let cm=getHeightCm();
+    if(cm) height.value=Math.round(cm*10)/10;
+  }
+
+  heightUnit=unit;
+  heightMetricGroup.hidden=unit!=="cm";
+  heightImperialGroup.hidden=unit!=="ftin";
+  heightMetricBtn.classList.toggle("active", unit==="cm");
+  heightImperialBtn.classList.toggle("active", unit==="ftin");
+}
+
+function setWeightUnit(unit){
+  if(unit===weightUnit) return;
+
+  if(unit==="lbs"){
+    let kg=parseFloat(weight.value);
+    if(kg) weightLbs.value=Math.round((kg*2.20462)*10)/10;
+  } else {
+    let kg=getWeightKg();
+    if(kg) weight.value=Math.round(kg*10)/10;
+  }
+
+  weightUnit=unit;
+  weightMetricGroup.hidden=unit!=="kg";
+  weightImperialGroup.hidden=unit!=="lbs";
+  weightMetricBtn.classList.toggle("active", unit==="kg");
+  weightImperialBtn.classList.toggle("active", unit==="lbs");
+}
+
+function getHeightCm(){
+  if(heightUnit==="cm"){
+    let cm=parseFloat(height.value);
+    return cm>0 ? cm : null;
+  }
+
+  let feet=parseFloat(heightFeet.value);
+  let inches=parseFloat(heightInches.value);
+  if((!feet && feet!==0) && (!inches && inches!==0)) return null;
+  let totalInches=(feet||0)*12+(inches||0);
+  return totalInches>0 ? totalInches*2.54 : null;
+}
+
+function getWeightKg(){
+  if(weightUnit==="kg"){
+    let kg=parseFloat(weight.value);
+    return kg>0 ? kg : null;
+  }
+
+  let lbs=parseFloat(weightLbs.value);
+  return lbs>0 ? lbs/2.20462 : null;
+}
+
+function getAdjSchedule(){
+  if(!adjGlobalStart) return [];
+
+  let schedule=[];
+  let nextExpected=normalizeDate(adjGlobalStart);
+
+  for(let i=0;i<6;i++){
+    let expectedStart=normalizeDate(nextExpected);
+    let actualStart=expectedStart;
+
+    if(adjCycleAnswers[i]===false && adjCycleOverrides[i]){
+      actualStart=normalizeDate(adjCycleOverrides[i]);
+    }
+
+    schedule.push({
+      index:i,
+      expectedStart,
+      actualStart,
+      startedOnTime: adjCycleAnswers[i]
+    });
+
+    nextExpected=addDays(actualStart,28);
+  }
+
+  return schedule;
+}
+
+function getAdjCycleInfo(date,schedule){
+  for(let i=0;i<schedule.length;i++){
+    let diff=Math.floor((normalizeDate(date)-schedule[i].actualStart)/(1000*60*60*24));
+    if(diff>=0 && diff<28){
+      return {cycle:i+1, day:diff+1, start:schedule[i].actualStart};
+    }
+  }
+  return null;
+}
+
+function renderCycleControlItem(cycle){
+  let item=document.createElement("div");
+  item.className="cycle-item";
+
+  let title=document.createElement("strong");
+  title.textContent=`Cycle ${cycle.index+1}`;
+  item.appendChild(title);
+
+  let meta=document.createElement("p");
+  let details=`Planned start: ${formatDate(cycle.expectedStart)}`;
+  if(cycle.startedOnTime===false && adjCycleOverrides[cycle.index]){
+    details+=`\nStarted: ${formatDate(cycle.actualStart)}`;
+  }
+  meta.className="cycle-meta";
+  meta.textContent=details;
+  item.appendChild(meta);
+
+  let actions=document.createElement("div");
+  actions.className="cycle-actions";
+
+  let yesBtn=document.createElement("button");
+  yesBtn.type="button";
+  yesBtn.textContent="Yes";
+  yesBtn.className=cycle.startedOnTime===true ? "active" : "";
+  yesBtn.onclick=()=>markCycleOnTime(cycle.index,true);
+  actions.appendChild(yesBtn);
+
+  let noBtn=document.createElement("button");
+  noBtn.type="button";
+  noBtn.textContent="No";
+  noBtn.className=cycle.startedOnTime===false ? "active" : "";
+  noBtn.onclick=()=>markCycleOnTime(cycle.index,false);
+  actions.appendChild(noBtn);
+
+  item.appendChild(actions);
+
+  let status=document.createElement("p");
+  status.className="cycle-status";
+  if(cycle.startedOnTime===true){
+    status.textContent="Did you start the cycle on time? Yes";
+  } else if(cycle.startedOnTime===false && adjCycleOverrides[cycle.index]){
+    status.textContent=`Did you start the cycle on time? No. Adjusted start: ${formatDate(cycle.actualStart)}`;
+  } else if(cycle.startedOnTime===false){
+    status.textContent="Did you start the cycle on time? No. Click a calendar day to choose the actual start date.";
+  } else {
+    status.textContent="Did you start the cycle on time?";
+  }
+  item.appendChild(status);
+
+  return item;
+}
+
+function buildMonthCyclePanel(monthDate,schedule){
+  let month=monthDate.getMonth();
+  let year=monthDate.getFullYear();
+  let cycles=schedule.filter((cycle)=>{
+    let expected=cycle.expectedStart;
+    return expected.getMonth()===month && expected.getFullYear()===year;
+  });
+
+  if(!cycles.length) return null;
+
+  let panel=document.createElement("div");
+  panel.className="month-cycle-panel";
+
+  let heading=document.createElement("h4");
+  heading.textContent="Cycle Start Check";
+  panel.appendChild(heading);
+
+  let list=document.createElement("div");
+  list.className="cycle-list";
+
+  cycles.forEach((cycle)=>{
+    list.appendChild(renderCycleControlItem(cycle));
+  });
+
+  panel.appendChild(list);
+
+  if(selectingCycleIndex!==null){
+    let activeCycle=schedule[selectingCycleIndex];
+    if(activeCycle && activeCycle.expectedStart.getMonth()===month && activeCycle.expectedStart.getFullYear()===year){
+      let note=document.createElement("p");
+      note.className="selection-note";
+      note.textContent=`Selecting a new start date for Cycle ${selectingCycleIndex+1}. Click a calendar day on or after ${formatDate(activeCycle.expectedStart)}.`;
+      panel.appendChild(note);
+    }
+  }
+
+  return panel;
+}
+
+function markCycleOnTime(index,startedOnTime){
+  adjCycleAnswers[index]=startedOnTime;
+
+  if(startedOnTime){
+    adjCycleOverrides[index]=null;
+    if(selectingCycleIndex===index) selectingCycleIndex=null;
+  } else {
+    adjCycleOverrides[index]=null;
+    selectingCycleIndex=index;
+  }
+
+  refreshAdjuvantCalendar();
+  plannerGenerated=true;
+  downloadPrintableBtn.disabled=false;
+}
+
+function selectCycleStart(index,date){
+  let schedule=getAdjSchedule();
+  let minDate=schedule[index].expectedStart;
+  let picked=normalizeDate(date);
+  if(picked < minDate) return;
+
+  adjCycleOverrides[index]=picked;
+  adjCycleAnswers[index]=false;
+  selectingCycleIndex=null;
+  refreshAdjuvantCalendar();
+  plannerGenerated=true;
+  downloadPrintableBtn.disabled=false;
+}
+
+function generateCalendar(start, totalDays, type){
+  let container=document.createElement("div");
+  container.className="calendar-grid";
+  let current=normalizeDate(start);
+  let end=addDays(start,totalDays);
+  let adjSchedule=type==="adj" ? getAdjSchedule() : [];
+  let minSelectableDate=selectingCycleIndex!==null && adjSchedule[selectingCycleIndex]
+    ? adjSchedule[selectingCycleIndex].expectedStart
+    : null;
+
+  while(current < end){
+    let month=current.getMonth();
+
+    let title=document.createElement("div");
+    title.className="month-title";
+    title.innerText=current.toLocaleString("default",{month:"long",year:"numeric"});
+    let monthBlock=document.createElement("section");
+    monthBlock.className="month-block";
+    monthBlock.appendChild(title);
+
+    if(type==="adj"){
+      let monthPanel=buildMonthCyclePanel(current,adjSchedule);
+      if(monthPanel) monthBlock.appendChild(monthPanel);
+    }
+
+    let tableWrap=document.createElement("div");
+    tableWrap.className="table-wrap";
+    let table=document.createElement("table");
+
+    let header="<tr>";
+    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d=>header+=`<th>${d}</th>`);
+    header+="</tr>";
+    table.innerHTML=header;
+
+    let row=document.createElement("tr");
+
+    for(let i=0;i<current.getDay();i++){
+      row.innerHTML+="<td></td>";
+    }
+
+    while(current.getMonth()===month && current<end){
+      let d=current.getDay();
+      let cell=document.createElement("td");
+      let text=`<strong>${current.getDate()}</strong>`;
+      let cellDate=normalizeDate(current);
+
+      if(d===0||d===6) cell.classList.add("weekend");
+
+      let baseDate = (type==="adj") ? adjGlobalStart : startGlobal;
+      let diff = Math.floor((cellDate - baseDate)/(1000*60*60*24));
+
+      // CONCOMITANT
+      if(type==="con" && diff>=0 && diff<42){
+        cell.classList.add("chemo");
+        text+=`<br><span class="day-label">Day ${diff+1}</span>`;
+        text+=(d!==0&&d!==6)?`<span class="day-event">RT + TMZ</span>`:`<span class="day-event">TMZ only</span>`;
+      }
+
+      if(type==="adj"){
+        let cycleInfo=getAdjCycleInfo(cellDate,adjSchedule);
+
+        if(cycleInfo){
+          text+=`<br><span class="day-label">C${cycleInfo.cycle} D${cycleInfo.day}</span>`;
+
+          if(cycleInfo.day<6){
+            cell.classList.add("chemo");
+          }
+
+          if(cycleInfo.day===1){
+            cell.classList.add("cycle-start");
+            text+=`<span class="day-event">Cycle start</span>`;
+          }
+
+          text+=cycleInfo.day<6 ? `<span class="day-event">TMZ</span>` : `<span class="day-event">Off</span>`;
+        }
+
+        if(selectingCycleIndex!==null && minSelectableDate && cellDate >= minSelectableDate){
+          cell.classList.add("selectable-date");
+          cell.onclick=()=>selectCycleStart(selectingCycleIndex, cellDate);
+          if(!cycleInfo){
+            text+=`<span class="day-event">Click to set Cycle ${selectingCycleIndex+1} start</span>`;
+          }
+        }
+      }
+
+      cell.innerHTML=text;
+      row.appendChild(cell);
+
+      if(d===6){
+        table.appendChild(row);
+        row=document.createElement("tr");
+      }
+
+      current.setDate(current.getDate()+1);
+    }
+
+    table.appendChild(row);
+    tableWrap.appendChild(table);
+    monthBlock.appendChild(tableWrap);
+    container.appendChild(monthBlock);
+  }
+
+  return container;
+}
+
+function refreshAdjuvantCalendar(){
+  if(!adjGlobalStart) return;
+
+  let schedule=getAdjSchedule();
+  let finalEnd=addDays(schedule[schedule.length-1].actualStart,28);
+  if(selectingCycleIndex!==null){
+    finalEnd=addDays(finalEnd,28);
+  }
+
+  let totalDays=Math.ceil((finalEnd - schedule[0].actualStart)/(1000*60*60*24));
+
+  adjCalendar.innerHTML="";
+  adjCalendar.appendChild(generateCalendar(schedule[0].actualStart,totalDays,"adj"));
+}
+
+function syncFormValues(sourceRoot, cloneRoot){
+  let sourceFields=sourceRoot.querySelectorAll("input, textarea, select");
+  let cloneFields=cloneRoot.querySelectorAll("input, textarea, select");
+
+  sourceFields.forEach((field, index)=>{
+    let cloneField=cloneFields[index];
+    if(!cloneField) return;
+
+    if(field.type==="checkbox" || field.type==="radio"){
+      cloneField.checked=field.checked;
+      if(field.checked) cloneField.setAttribute("checked", "checked");
+      else cloneField.removeAttribute("checked");
+    } else {
+      cloneField.value=field.value;
+      cloneField.setAttribute("value", field.value);
+    }
+  });
+}
+
+function buildPrintablePageClone(){
+  let source=document.querySelector(".page");
+  let clone=source.cloneNode(true);
+  syncFormValues(source, clone);
+
+  clone.querySelectorAll("button").forEach((button)=>button.remove());
+  clone.querySelectorAll(".export-hint").forEach((hint)=>hint.remove());
+  clone.querySelectorAll(".selectable-date").forEach((cell)=>cell.classList.remove("selectable-date"));
+  clone.querySelectorAll("input").forEach((input)=>{
+    input.readOnly=true;
+    input.style.pointerEvents="none";
+  });
+
+  return clone.outerHTML;
+}
+
+function buildPrintablePdfDocument(){
+  let styleTag=document.querySelector("style");
+  let styleContent=styleTag ? styleTag.textContent : "";
+  let printedAt=new Date().toLocaleString();
+  let pageHtml=buildPrintablePageClone();
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Stupp Protocol PDF</title>
+  <style>${styleContent}</style>
+  <style>
+    body {
+      background: white !important;
+    }
+    .page {
+      width: 1180px !important;
+      margin: 0 auto !important;
+      transform-origin: top center;
+    }
+    .button-row {
+      display: none !important;
+    }
+    .info-stack {
+      position: static !important;
+    }
+    .export-toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 18px;
+      background: rgba(255,255,255,0.96);
+      border-bottom: 1px solid #dcc9ad;
+      backdrop-filter: blur(10px);
+      font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
+    }
+    .export-print-stamp {
+      color: #7c6954;
+      font-size: 13px;
+    }
+    .export-download-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: linear-gradient(135deg, #8b5e34 0%, #a97746 100%);
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 12px 26px rgba(101, 66, 31, 0.22);
+    }
+    .export-page {
+      padding-top: 18px;
+    }
+    @media print {
+      body {
+        zoom: 0.82;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .export-toolbar {
+        display: none !important;
+      }
+      .export-page {
+        padding-top: 0;
+      }
+    }
+    @page {
+      size: auto;
+      margin: 10mm;
+    }
+  </style>
+</head>
+<body>
+  <div class="export-toolbar">
+    <div class="export-print-stamp">Printable version generated ${escapeHtml(printedAt)}</div>
+    <button class="export-download-btn" onclick="window.print()">Download as PDF</button>
+  </div>
+  <div class="export-page">
+    ${pageHtml}
+  </div>
+</body>
+</html>`;
+}
+
+function downloadPrintablePdf(){
+  if(!plannerGenerated){
+    alert("Generate the planner first.");
+    return;
+  }
+
+  let printWindow=window.open("", "_blank");
+  if(!printWindow){
+    alert("Please allow pop-ups to open the printable PDF view.");
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(buildPrintablePdfDocument());
+  printWindow.document.close();
+}
+
+function generate(){
+  let start=parseDateValue(startDate.value);
+  let h=getHeightCm();
+  let w=getWeightKg();
+  patientNameValue=patientName.value.trim();
+
+  if(!startDate.value || !h || !w){
+    alert("Fill all required fields");
+    return;
+  }
+
+  startGlobal=normalizeDate(start);
+
+  // Reset interactive cycle adjustments for a new plan.
+  adjCycleAnswers=Array(6).fill(null);
+  adjCycleOverrides=Array(6).fill(null);
+  selectingCycleIndex=null;
+
+  // ===== BSA (Du Bois)
+  let bsa=0.007184*Math.pow(h,0.725)*Math.pow(w,0.425);
+
+  // ===== CONCOMITANT =====
+  let rt=parseTime(rtTime.value);
+  let tmz=rt?new Date(rt.getTime()-3600000):null;
+  let ond=tmz?new Date(tmz.getTime()-1800000):null;
+  let meal=tmz?new Date(tmz.getTime()-10800000):null;
+  let eat=tmz?new Date(tmz.getTime()+7200000):null;
+
+  let dose=round20(75*bsa);
+  let {n100,n20}=tabletBreakdown(dose);
+
+  let total100=n100*42;
+  let total20=n20*42;
+
+  conDose.innerText=`BSA: ${bsa.toFixed(2)} m²
+
+Height: ${h.toFixed(1)} cm
+Weight: ${w.toFixed(1)} kg
+
+Dose: ${dose} mg (${n100}x100mg + ${n20}x20mg)
+
+TOTAL:
+100mg: ${total100} tabs (${boxes(total100)} boxes)
+20mg: ${total20} tabs (${boxes(total20)} boxes)`;
+
+  conTiming.innerText=buildSteps([
+    {label:"Last meal",time:meal},
+    {label:"Ondansetron (1 tab)",time:ond},
+    {label:"Temozolomide",time:tmz},
+    {label:"Radiation",time:rt},
+    {label:"May eat again (2 hrs after TMZ)",time:eat}
+  ]);
+
+  conCalendar.innerHTML="";
+  conCalendar.appendChild(generateCalendar(startGlobal,42,"con"));
+
+  // ===== ADJUVANT =====
+  let conEnd=addDays(startGlobal,41);
+  adjGlobalStart=addDays(conEnd,28);
+
+  let d1=round20(150*bsa);
+  let d2=round20(200*bsa);
+
+  let b1=tabletBreakdown(d1);
+  let b2=tabletBreakdown(d2);
+
+  let c1_100=b1.n100*5;
+  let c1_20=b1.n20*5;
+
+  let cX_100=b2.n100*5;
+  let cX_20=b2.n20*5;
+
+  let totalAdj100=c1_100+(cX_100*5);
+  let totalAdj20=c1_20+(cX_20*5);
+
+  adjDose.innerText=`BSA: ${bsa.toFixed(2)} m²
+
+Cycle 1 Dose: ${d1} mg (${b1.n100}x100mg + ${b1.n20}x20mg)
+Per cycle:
+100mg: ${c1_100} tabs (${boxes(c1_100)} boxes)
+20mg: ${c1_20} tabs (${boxes(c1_20)} boxes)
+
+Cycle 2–6 Dose: ${d2} mg (${b2.n100}x100mg + ${b2.n20}x20mg)
+Per cycle:
+100mg: ${cX_100} tabs (${boxes(cX_100)} boxes)
+20mg: ${cX_20} tabs (${boxes(cX_20)} boxes)
+
+TOTAL (6 cycles):
+100mg: ${totalAdj100} tabs (${boxes(totalAdj100)} boxes)
+20mg: ${totalAdj20} tabs (${boxes(totalAdj20)} boxes)`;
+
+  let tmzA=parseTime(tmzTime.value);
+  let ondA=tmzA?new Date(tmzA.getTime()-1800000):null;
+  let mealA=tmzA?new Date(tmzA.getTime()-10800000):null;
+  let eatA=tmzA?new Date(tmzA.getTime()+7200000):null;
+
+  adjTiming.innerText=buildSteps([
+    {label:"Last meal",time:mealA},
+    {label:"Ondansetron (2 tabs)",time:ondA},
+    {label:"Temozolomide",time:tmzA},
+    {label:"May eat again (2 hrs after TMZ)",time:eatA}
+  ]);
+
+  refreshAdjuvantCalendar();
+  plannerGenerated=true;
+  downloadPrintableBtn.disabled=false;
+}
+
+setHeightUnit("cm");
+setWeightUnit("kg");
+</script>
+
+</body>
+</html>
