@@ -539,7 +539,7 @@
     <div class="input-grid">
       <div class="field field-wide">
         <label for="patientName">Name</label>
-        <input type="text" id="patientName" placeholder="Patient name">
+        <input type="text" id="patientName" placeholder="Patient name" value="Juan Dela Cruz">
       </div>
 
       <div class="field field-wide">
@@ -554,7 +554,7 @@
           <button type="button" class="toggle-chip" id="heightImperialBtn" onclick="setHeightUnit('ftin')">ft / in</button>
         </div>
         <div class="input-group" id="heightMetricGroup">
-          <input type="number" id="height" placeholder="e.g. 165">
+          <input type="number" id="height" placeholder="e.g. 165" value="170">
         </div>
         <div class="input-group field-split" id="heightImperialGroup" hidden>
           <input type="number" id="heightFeet" placeholder="Feet">
@@ -569,7 +569,7 @@
           <button type="button" class="toggle-chip" id="weightImperialBtn" onclick="setWeightUnit('lbs')">lbs</button>
         </div>
         <div class="input-group" id="weightMetricGroup">
-          <input type="number" id="weight" placeholder="e.g. 60">
+          <input type="number" id="weight" placeholder="e.g. 60" value="70">
         </div>
         <div class="input-group" id="weightImperialGroup" hidden>
           <input type="number" id="weightLbs" placeholder="e.g. 132">
@@ -578,7 +578,7 @@
 
       <div class="field">
         <label for="rtTime">Radiation time</label>
-        <input type="time" id="rtTime">
+        <input type="time" id="rtTime" value="10:00">
       </div>
 
       <div class="field">
@@ -590,7 +590,7 @@
     <div class="button-row">
       <button onclick="generate()">Generate Planner</button>
       <button id="downloadPrintableBtn" class="secondary-button" onclick="downloadPrintablePdf()" disabled>Download as PDF</button>
-      <p class="export-hint">Opens a PDF-ready page with a manual download button instead of printing automatically.</p>
+      <p class="export-hint">Downloads a PDF screenshot of the current planner view, including the full calendar.</p>
     </div>
   </section>
 
@@ -1072,6 +1072,52 @@ function refreshAdjuvantCalendar(){
   adjCalendar.appendChild(generateCalendar(schedule[0].actualStart,totalDays,"adj"));
 }
 
+const HTML2CANVAS_SRC = "file:///Users/elizermontemayor/Documents/Codex/2026-05-03/make-an-app-similar-to-this/html2canvas.min.js";
+const PDFLIB_SRC = "file:///Users/elizermontemayor/Documents/Codex/Stupp%20Protocol%20Maker%20app/pdf-lib.min.js";
+
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    let existing=document.querySelector(`script[data-src="${src}"]`);
+    if(existing){
+      if(existing.dataset.loaded==="true"){
+        resolve();
+      } else {
+        existing.addEventListener("load", ()=>resolve(), {once:true});
+        existing.addEventListener("error", ()=>reject(new Error(`Unable to load ${src}`)), {once:true});
+      }
+      return;
+    }
+
+    let script=document.createElement("script");
+    script.src=src;
+    script.async=true;
+    script.dataset.src=src;
+    script.onload=()=>{
+      script.dataset.loaded="true";
+      resolve();
+    };
+    script.onerror=()=>reject(new Error(`Unable to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+async function ensurePdfTools(){
+  if(!window.html2canvas){
+    await loadScript(HTML2CANVAS_SRC);
+  }
+  if(!window.PDFLib){
+    await loadScript(PDFLIB_SRC);
+  }
+}
+
+function getTodayInputValue(){
+  let now=new Date();
+  let year=now.getFullYear();
+  let month=String(now.getMonth()+1).padStart(2,"0");
+  let day=String(now.getDate()).padStart(2,"0");
+  return `${year}-${month}-${day}`;
+}
+
 function syncFormValues(sourceRoot, cloneRoot){
   let sourceFields=sourceRoot.querySelectorAll("input, textarea, select");
   let cloneFields=cloneRoot.querySelectorAll("input, textarea, select");
@@ -1091,127 +1137,122 @@ function syncFormValues(sourceRoot, cloneRoot){
   });
 }
 
-function buildPrintablePageClone(){
+function buildPdfCaptureClone(){
   let source=document.querySelector(".page");
   let clone=source.cloneNode(true);
   syncFormValues(source, clone);
 
-  clone.querySelectorAll("button").forEach((button)=>button.remove());
-  clone.querySelectorAll(".export-hint").forEach((hint)=>hint.remove());
-  clone.querySelectorAll(".selectable-date").forEach((cell)=>cell.classList.remove("selectable-date"));
-  clone.querySelectorAll("input").forEach((input)=>{
-    input.readOnly=true;
-    input.style.pointerEvents="none";
+  clone.style.width=`${Math.ceil(source.getBoundingClientRect().width)}px`;
+  clone.querySelectorAll(".info-stack").forEach((el)=>{
+    el.style.position="static";
+    el.style.top="auto";
+  });
+  clone.querySelectorAll(".table-wrap").forEach((el)=>{
+    el.style.overflow="visible";
+  });
+  clone.querySelectorAll("table").forEach((el)=>{
+    el.style.minWidth="0";
+    el.style.width="100%";
+  });
+  clone.querySelectorAll(".calendar-shell").forEach((el)=>{
+    el.style.overflow="visible";
   });
 
-  return clone.outerHTML;
+  return clone;
 }
 
-function buildPrintablePdfDocument(){
-  let styleTag=document.querySelector("style");
-  let styleContent=styleTag ? styleTag.textContent : "";
-  let printedAt=new Date().toLocaleString();
-  let pageHtml=buildPrintablePageClone();
+async function createPlannerCanvas(){
+  await ensurePdfTools();
 
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Stupp Protocol PDF</title>
-  <style>${styleContent}</style>
-  <style>
-    body {
-      background: white !important;
-    }
-    .page {
-      width: 1180px !important;
-      margin: 0 auto !important;
-      transform-origin: top center;
-    }
-    .button-row {
-      display: none !important;
-    }
-    .info-stack {
-      position: static !important;
-    }
-    .export-toolbar {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-      padding: 14px 18px;
-      background: rgba(255,255,255,0.96);
-      border-bottom: 1px solid #dcc9ad;
-      backdrop-filter: blur(10px);
-      font-family: "Avenir Next", "Segoe UI", Arial, sans-serif;
-    }
-    .export-print-stamp {
-      color: #7c6954;
-      font-size: 13px;
-    }
-    .export-download-btn {
-      border: none;
-      border-radius: 999px;
-      padding: 12px 18px;
-      background: linear-gradient(135deg, #8b5e34 0%, #a97746 100%);
-      color: white;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 12px 26px rgba(101, 66, 31, 0.22);
-    }
-    .export-page {
-      padding-top: 18px;
-    }
-    @media print {
-      body {
-        zoom: 0.82;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-      }
-      .export-toolbar {
-        display: none !important;
-      }
-      .export-page {
-        padding-top: 0;
-      }
-    }
-    @page {
-      size: auto;
-      margin: 10mm;
-    }
-  </style>
-</head>
-<body>
-  <div class="export-toolbar">
-    <div class="export-print-stamp">Printable version generated ${escapeHtml(printedAt)}</div>
-    <button class="export-download-btn" onclick="window.print()">Download as PDF</button>
-  </div>
-  <div class="export-page">
-    ${pageHtml}
-  </div>
-</body>
-</html>`;
+  let clone=buildPdfCaptureClone();
+  let wrapper=document.createElement("div");
+  wrapper.style.position="fixed";
+  wrapper.style.left="-10000px";
+  wrapper.style.top="0";
+  wrapper.style.zIndex="-1";
+  wrapper.style.pointerEvents="none";
+  wrapper.style.background="#ffffff";
+  wrapper.style.padding="0";
+  wrapper.style.margin="0";
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  let width=Math.ceil(clone.scrollWidth);
+  let height=Math.ceil(clone.scrollHeight);
+
+  try {
+    return await window.html2canvas(clone, {
+      backgroundColor: "#ffffff",
+      scale: 2,
+      useCORS: false,
+      allowTaint: true,
+      width,
+      height,
+      windowWidth: Math.max(width, window.innerWidth),
+      windowHeight: Math.max(height, window.innerHeight),
+      scrollX: 0,
+      scrollY: 0
+    });
+  } finally {
+    wrapper.remove();
+  }
 }
 
-function downloadPrintablePdf(){
+async function buildPlannerPdfBlob(){
+  let canvas=await createPlannerCanvas();
+  let pngDataUrl=canvas.toDataURL("image/png");
+  let { PDFDocument } = window.PDFLib;
+  let pdfDoc=await PDFDocument.create();
+  let image=await pdfDoc.embedPng(pngDataUrl);
+
+  const pageWidth=595.28;
+  const pageHeight=841.89;
+  const margin=18;
+  const drawWidth=pageWidth-(margin*2);
+  const scaledHeight=(image.height*drawWidth)/image.width;
+  const printableHeight=pageHeight-(margin*2);
+
+  for(let offset=0; offset<scaledHeight; offset+=printableHeight){
+    let page=pdfDoc.addPage([pageWidth, pageHeight]);
+    let y=pageHeight-margin-scaledHeight+offset;
+    page.drawImage(image, {
+      x: margin,
+      y,
+      width: drawWidth,
+      height: scaledHeight
+    });
+  }
+
+  let pdfBytes=await pdfDoc.save();
+  return new Blob([pdfBytes], {type:"application/pdf"});
+}
+
+async function downloadPrintablePdf(){
   if(!plannerGenerated){
     alert("Generate the planner first.");
     return;
   }
 
-  let printWindow=window.open("", "_blank");
-  if(!printWindow){
-    alert("Please allow pop-ups to open the printable PDF view.");
-    return;
-  }
+  let originalText=downloadPrintableBtn.textContent;
+  downloadPrintableBtn.disabled=true;
+  downloadPrintableBtn.textContent="Preparing PDF...";
 
-  printWindow.document.open();
-  printWindow.document.write(buildPrintablePdfDocument());
-  printWindow.document.close();
+  try {
+    let blob=await buildPlannerPdfBlob();
+    let url=URL.createObjectURL(blob);
+    let link=document.createElement("a");
+    link.href=url;
+    link.download=`stupp-planner-${formatDateForFilename(startGlobal)}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  } catch (error) {
+    alert(error.message || "Unable to generate the PDF download.");
+  } finally {
+    downloadPrintableBtn.disabled=false;
+    downloadPrintableBtn.textContent=originalText;
+  }
 }
 
 function generate(){
@@ -1322,6 +1363,7 @@ TOTAL (6 cycles):
   downloadPrintableBtn.disabled=false;
 }
 
+startDate.value ||= getTodayInputValue();
 setHeightUnit("cm");
 setWeightUnit("kg");
 </script>
